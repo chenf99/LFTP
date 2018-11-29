@@ -1,0 +1,6 @@
+code/LFTP/bin/
+
+*.settings/
+*.classpath
+*.project
+*.metadata
