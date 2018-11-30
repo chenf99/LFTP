@@ -22,7 +22,9 @@ public class FileIO {
             // 获得流文件需要分开的数量
             streamNum = (int)Math.floor(streamTotal/MAX_BYTE);
             // 获得分开成多个登长流文件后，最后剩余的流大小
-            leave = (int)streamTotal/streamNum;
+            if(streamNum > 0)
+            	leave = (int)streamTotal/streamNum;
+            else leave = (int)streamTotal;
             if(streamNum > 0) {
             	for(int i = 0; i < streamNum; i++) {
             		byte[] data;
@@ -57,6 +59,14 @@ public class FileIO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    public static int getFileSize(String path) {
+    	return 0;
+    }
+    
+    public static int getBufferLength(String path) {
+    	return 0;
     }
     
 

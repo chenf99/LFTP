@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 import tools.ByteConverter;
+import tools.FileIO;
 import tools.Packet;
 
 public class ReceiveThread implements Runnable {
@@ -20,13 +23,18 @@ public class ReceiveThread implements Runnable {
 	public void run() {
 		try {
 			DatagramSocket socket = new DatagramSocket(port);
-			byte[] buffer = new byte[BUFSIZE];
-			while (true) {
-				DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
-				socket.receive(dp);
+			byte[] buffer = new byte[BUFSIZE+1];
+			List<byte[]> data = new ArrayList<>();
+			DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
+			socket.receive(dp);
+			while (dp.getLength() != 0) {
 				Packet packet = ByteConverter.bytesToObject(buffer);
 				System.out.println(packet.getSeq());
+				data.add(packet.getData());
+				socket.receive(dp);
 			}
+			String dirString = "output.txt";
+			FileIO.byte2file(dirString, data);
 		}
 		catch (SocketException e) {
 			System.out.println("ReceiveThread: ´´½¨socket³ö´í");

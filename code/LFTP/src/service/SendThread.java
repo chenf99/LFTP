@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.nio.Buffer;
 import java.util.List;
 
 import tools.ByteConverter;
@@ -26,11 +27,18 @@ public class SendThread implements Runnable {
 		DatagramSocket socket = null;
 		try {
 			socket = new DatagramSocket();
+			System.out.println("size: " + data.size());
 			for (int i = 0; i < data.size(); ++i) {
 				byte[] buffer = ByteConverter.objectToBytes(data.get(i));
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, port);
 				socket.send(dp);
+				System.out.println("传输片段：" + i);
 			}
+			System.out.print("传输终止packet");
+			DatagramPacket dp = new DatagramPacket(new byte[1], 0, address, port);
+			socket.send(dp);
+			System.out.println("传输完毕");
+			
 		} catch (SocketException e) {
 			System.out.println("SendThread: 创建socket出错");
 			e.printStackTrace();
