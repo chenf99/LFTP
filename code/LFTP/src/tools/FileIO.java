@@ -13,7 +13,7 @@ public class FileIO {
         try {
             FileInputStream inStream =new FileInputStream(new File(path));
             List<byte[]> datas = new ArrayList<>();
-            final int MAX_BYTE = 1024*1024;	//每个byte[]的容量
+            final int MAX_BYTE = 1024;	//每个byte[]的容量,当前1Kb
             long streamTotal = 0;  //接受流的容量
             int streamNum = 0;  //流需要分开的数量
             int leave = 0;  //文件剩下的字符数
@@ -58,11 +58,12 @@ public class FileIO {
             e.printStackTrace();
         }
     }
+    
 
     public static void main(String[] args) {
         List<byte[]> datas=file2byte("test.mp4");   
         System.out.println("readFile succeed!");
-        byte2file("testmp4.mp4",datas);
+        byte2file("output.mp4",datas);
         System.out.println("saveFile succeed!");
         
     }
