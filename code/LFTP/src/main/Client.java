@@ -15,7 +15,7 @@ import tools.*;
 public class Client {
 	
 	public static void main(String[] args) {
-    	String dir = "test.txt";
+    	String dir = "test.mp4";
     	String address = "localhost";
     	int port = 3888;
     	System.out.println("正在往 " + address + ":" + port + " 传送文件: " + dir);

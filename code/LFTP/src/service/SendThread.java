@@ -33,6 +33,10 @@ public class SendThread implements Runnable {
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, port);
 				socket.send(dp);
 				System.out.println("传输片段：" + i);
+				// 休眠50ms，简单避免拥塞导致的丢包
+				if((i%50)==0) {
+					Thread.sleep(50);
+				}
 			}
 			System.out.print("传输终止packet");
 			DatagramPacket dp = new DatagramPacket(new byte[1], 0, address, port);
@@ -44,6 +48,9 @@ public class SendThread implements Runnable {
 			e.printStackTrace();
 		} catch (IOException e) {
 			System.out.println("SendThread: 发送数据包出错");
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			System.out.println("Sleep: 发生出错");
 			e.printStackTrace();
 		}
 	}

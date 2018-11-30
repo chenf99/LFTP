@@ -31,10 +31,12 @@ public class ReceiveThread implements Runnable {
 			while (dp.getLength() != 0) {
 				Packet packet = ByteConverter.bytesToObject(buffer);
 				data.add(packet.getData());
+				System.out.println("接收片段：" + packet.getSeq());
 				socket.receive(dp);
 			}
-			String dirString = "output.txt";
+			String dirString = "output.mp4";
 			FileIO.byte2file(dirString, data);
+			System.out.println("接收并写入完毕！");
 		}
 		catch (SocketException e) {
 			System.out.println("ReceiveThread: 创建socket出错");
