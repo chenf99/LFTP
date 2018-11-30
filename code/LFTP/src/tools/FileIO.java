@@ -31,15 +31,14 @@ public class FileIO {
             		data = new byte[MAX_BYTE];
             		inStream.read(data, 0, MAX_BYTE);
             		datas.add(data);
-            		System.out.println("读取文件片段" + i);
             	}
             }
             // 处理最后剩余的部分字符
             byte[] data = new byte[leave];
             inStream.read(data, 0, leave);
             datas.add(data);
-    		System.out.println("读取文件片段" + streamNum);
             inStream.close();
+            System.out.println("读取文件完毕,共 " + streamNum + "段");
             return datas;
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,7 +52,7 @@ public class FileIO {
             for(int i = 0; i < datas.size(); i++) {
             	outputStream.write(datas.get(i));
             	outputStream.flush();
-        		System.out.println("写入文件片段" + i);
+        		//System.out.println("写入文件片段" + i);
             }
             outputStream.close();
         } catch (Exception e) {
@@ -71,9 +70,9 @@ public class FileIO {
     
 
     public static void main(String[] args) {
-        List<byte[]> datas=file2byte("test.mp4");   
+        List<byte[]> datas=file2byte("test.txt");   
         System.out.println("readFile succeed!");
-        byte2file("output.mp4",datas);
+        byte2file("output.txt",datas);
         System.out.println("saveFile succeed!");
         
     }

@@ -12,7 +12,7 @@ import tools.FileIO;
 import tools.Packet;
 
 public class ReceiveThread implements Runnable {
-	private final static int BUFSIZE = 1024;
+	private final static int BUFSIZE = 1024 * 1024;
 	private int port;							//接收端口
 	
 	public ReceiveThread(int port) {
@@ -23,13 +23,13 @@ public class ReceiveThread implements Runnable {
 	public void run() {
 		try {
 			DatagramSocket socket = new DatagramSocket(port);
-			byte[] buffer = new byte[BUFSIZE+1];
+			byte[] buffer = new byte[BUFSIZE];
 			List<byte[]> data = new ArrayList<>();
 			DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 			socket.receive(dp);
+			int seq = 0;
 			while (dp.getLength() != 0) {
 				Packet packet = ByteConverter.bytesToObject(buffer);
-				System.out.println(packet.getSeq());
 				data.add(packet.getData());
 				socket.receive(dp);
 			}
@@ -41,7 +41,7 @@ public class ReceiveThread implements Runnable {
 			e.printStackTrace();
 		} catch (IOException e) {
 			System.out.println("ReceiveThread: 接收数据包出错");
-			e.printStackTrace();
+			e.printStackTrace();	
 		}
 	}
 }
