@@ -73,7 +73,7 @@ public class ReceiveThread implements Runnable {
 					socket.receive(dp);
 				}
 				// 接受到非期望数据包
-				if(packet.getSeq() != expectedseqnum) {
+				else {
 					// 返回一个错误接受的ACK包
 					Packet ackPacket = new Packet(expectedseqnum-1, -1, true, false, 1, null);
 					byte[] ackBuffer = ByteConverter.objectToBytes(ackPacket);
@@ -84,7 +84,7 @@ public class ReceiveThread implements Runnable {
 					socket.receive(dp);
 				}
 			}
-			String dirString = "output.txt";
+			String dirString = "output.mp4";
 			FileIO.byte2file(dirString, data);
 			System.out.println("接收并写入完毕！");
 		}
@@ -93,7 +93,7 @@ public class ReceiveThread implements Runnable {
 			e.printStackTrace();
 		} catch (IOException e) {
 			System.out.println("ReceiveThread: 接收数据包出错");
-			e.printStackTrace();	
+			e.printStackTrace();
 		}
 	}
 	

@@ -14,15 +14,17 @@ import tools.Packet;
 
 public class SendThread implements Runnable {
 	private final static int BUFSIZE = 1024 * 1024;
-	private List<Packet> data;		//要发送的数据
-	InetAddress address;			//目的地址
-	int sourcePort;					//源端口
-	int destPort;					//目的端口
-	private int base = 0;			//基序号
-	private int nextSeq = 0;		//下一个待发送分组的序号
-	private int N = 10;				//未确认的最大分组数
-	private Date date;				//记录启动定时器的时间
-	private DatagramSocket socket;	//用于发送数据包
+	private List<Packet> data;						//要发送的数据
+	InetAddress address;							//目的地址
+	int sourcePort;									//源端口
+	int destPort;									//目的端口
+	private volatile int base = 0;					//基序号
+	private volatile int nextSeq = 0;				//下一个待发送分组的序号
+	private int N = 10;								//未确认的最大分组数
+	private volatile Date date;						//记录启动定时器的时间
+	private DatagramSocket socket;					//用于发送数据包
+	private volatile boolean retrans= false;		//当前是否在重传
+	private volatile int currAck = -1;				//已被确认的最大分组ack
 	
 	
 	
@@ -49,17 +51,22 @@ public class SendThread implements Runnable {
 		recv_ack_thread.start();
 		
 		// 启动超时判断处理线程
-		Thread time_out_threadThread = new Thread(new TimeOut());
+		Thread time_out_threadThread;
+		time_out_threadThread = new Thread(new TimeOut());
 		time_out_threadThread.start();
 		
 		//启动发送数据包
 		try {
 			while (nextSeq < data.size()) {
-				if (nextSeq < base + N) {
+				if (nextSeq < base + N && retrans == false) {
+					//if (nextSeq % N != 0) {
 					byte[] buffer = ByteConverter.objectToBytes(data.get(nextSeq));
 					DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
+					Packet packet = ByteConverter.bytesToObject(dp.getData());
+					System.out.println("发送的分组序号: " + packet.getSeq());
 					socket.send(dp);
 					if (base == nextSeq) startTimer();
+					//}
 					nextSeq++;
 				}
 			}
@@ -69,15 +76,20 @@ public class SendThread implements Runnable {
 		}
 		
 		//传输完成时，发送一个FIN包告知接收方
-		try {
-			System.out.print("发送终止packet");
-			byte[] buffer = ByteConverter.objectToBytes(new Packet(0, 0, false, true, 0, null));
-			DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
-			socket.send(dp);
-			System.out.println("发送完毕");
-		} catch (IOException e) {
-			System.out.println("SendThread: 发送数据包出错");
-			e.printStackTrace();
+		while (true) {
+			if (currAck == data.size() - 1) {
+				try {
+					System.out.print("发送终止packet");
+					byte[] buffer = ByteConverter.objectToBytes(new Packet(-1, -1, false, true, -1, null));
+					DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
+					socket.send(dp);
+					System.out.println("发送完毕");
+				} catch (IOException e) {
+					System.out.println("SendThread: 发送数据包出错");
+					e.printStackTrace();
+				}
+				break;
+			}
 		}
 	
 	}
@@ -94,10 +106,11 @@ public class SendThread implements Runnable {
 					Packet packet = ByteConverter.bytesToObject(buffer);
 					System.out.println("确认分组: " + packet.getAck());
 					base = packet.getAck() + 1;
+					currAck = packet.getAck();
 					if (base != nextSeq) startTimer();
 					
 					//确认接收最后一个分组
-					if (packet.getAck() == data.size()) break;
+					if (packet.getAck() == data.size() - 1) break;
 				}
 			} catch (IOException e) {
 				System.out.println("ReceiveThread: 接收数据包出错");
@@ -112,16 +125,15 @@ public class SendThread implements Runnable {
 			while (true) {
 				long start_time = date.getTime();
 				long curr_time = new Date().getTime();
-				//超过3秒时触发超时
-				if (curr_time - start_time > 3000) {
+				//超过0.3秒时触发超时
+				if (curr_time - start_time > 300) {
 					System.out.println("启动重传！");
 					timeOut();
 				}
 				
 				//确认接收最后一个分组时停止计时
-				if (base == nextSeq) break;
+				if (currAck == data.size() - 1) break;
 			}
-			
 		}
 	}
 	
@@ -129,12 +141,16 @@ public class SendThread implements Runnable {
 	private void timeOut() {
 		startTimer();
 		try {
-			for (int i = base; i < nextSeq; ++i) {
+			//记录base值和nextSeq值，防止接收线程对其造成改变
+			int myBase = base, myNextSeq = nextSeq;
+			retrans = true;
+			for (int i = myBase; i < myNextSeq; ++i) {
 				byte[] buffer = ByteConverter.objectToBytes(data.get(i));
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
 				System.out.println("重新发送片段：" + i);
 				socket.send(dp);
 			}
+			retrans = false;
 		} catch (IOException e) {
 			System.out.println("SendThread: 发送数据包出错");
 			e.printStackTrace();
