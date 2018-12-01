@@ -7,13 +7,13 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;
 
 import tools.ByteConverter;
 import tools.Packet;
 
 public class SendThread implements Runnable {
 	private final static int BUFSIZE = 1024 * 1024;
+	private int TTL = 300;							//定时器过期间隔
 	private List<Packet> data;						//要发送的数据
 	InetAddress address;							//目的地址
 	int sourcePort;									//源端口
@@ -23,8 +23,9 @@ public class SendThread implements Runnable {
 	private int N = 10;								//未确认的最大分组数
 	private volatile Date date;						//记录启动定时器的时间
 	private DatagramSocket socket;					//用于发送数据包
-	private volatile boolean retrans= false;		//当前是否在重传
-	private volatile int currAck = -1;				//已被确认的最大分组ack
+	private volatile boolean retrans = false;		//当前是否在重传
+	private volatile int currAck = -1;				//最后一个被确认的分组ack
+	private volatile int rwnd = 1024;				//接收方空闲缓存空间
 	private String fileName;						//文件名
 	
 	
@@ -60,7 +61,11 @@ public class SendThread implements Runnable {
 		//启动发送数据包
 		try {
 			while (nextSeq < data.size()) {
-				if (nextSeq < base + N && retrans == false) {
+				//接收方缓存满
+				if (rwnd <= 0) {
+					System.out.println("接收方缓存满，暂停发送");
+				}
+				else if (nextSeq < base + N && retrans == false) {
 					//if (nextSeq % N != 0) {
 					byte[] buffer = ByteConverter.objectToBytes(data.get(nextSeq));
 					DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
@@ -79,9 +84,9 @@ public class SendThread implements Runnable {
 		
 		//传输完成时，发送一个FIN包告知接收方
 		while (true) {
-			if (currAck == data.size() - 1) {
+			if (currAck == data.size() - 1 && rwnd > 0) {
 				try {
-					System.out.print("发送终止packet");
+					System.out.println("发送终止packet");
 					byte[] buffer = ByteConverter.objectToBytes(new Packet(-1, -1, false, true, -1, null, fileName));
 					DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
 					socket.send(dp);
@@ -109,6 +114,7 @@ public class SendThread implements Runnable {
 					System.out.println("确认分组: " + packet.getAck());
 					base = packet.getAck() + 1;
 					currAck = packet.getAck();
+					rwnd = packet.getRwwd();
 					if (base != nextSeq) startTimer();
 					
 					//确认接收最后一个分组
@@ -128,10 +134,7 @@ public class SendThread implements Runnable {
 				long start_time = date.getTime();
 				long curr_time = new Date().getTime();
 				//超过0.3秒时触发超时
-				if (curr_time - start_time > 300) {
-					System.out.println("启动重传！");
-					timeOut();
-				}
+				if (curr_time - start_time > TTL) timeOut();
 				
 				//确认接收最后一个分组时停止计时
 				if (currAck == data.size() - 1) break;
@@ -141,12 +144,14 @@ public class SendThread implements Runnable {
 	
 	//超时引发重传事件
 	private void timeOut() {
+		System.out.println("启动重传！");
 		startTimer();
 		try {
 			//记录base值和nextSeq值，防止接收线程对其造成改变
 			int myBase = base, myNextSeq = nextSeq;
 			retrans = true;
 			for (int i = myBase; i < myNextSeq; ++i) {
+				while (rwnd <= 0) System.out.println("接收方缓存不够，暂停重传"); 
 				byte[] buffer = ByteConverter.objectToBytes(data.get(i));
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
 				System.out.println("重新发送片段：" + i);
