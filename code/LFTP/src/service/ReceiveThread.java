@@ -22,7 +22,7 @@ public class ReceiveThread implements Runnable {
 	InetAddress clientInetAddress;				// 客户端发送IP地址
 	int clientPort;								// 客户端发送端口
 	String fileName;							// 客户端发送的文件名
-	int rwnd = 1024;							// 服务器接受窗口为1Mb，用于流量控制
+	int rwnd = 1024 * 10;						// 服务器接受窗口为10Mb，用于流量控制
 	String dir = "server/"	;					// 服务端存储位置
 	
 	public ReceiveThread(int port) {
@@ -79,7 +79,7 @@ public class ReceiveThread implements Runnable {
 					// 清空List，重置接收窗口空闲空间
 					data.clear();
 					rwnd = 1024;
-					Packet ackPacket = new Packet(expectedseqnum-1, -1, true, false, rwnd, null, fileName);
+					Packet ackPacket = new Packet(expectedseqnum-1, -1, false, false, rwnd, null, fileName);
 					byte[] ackBuffer = ByteConverter.objectToBytes(ackPacket);
 					DatagramPacket ackdp = new DatagramPacket(ackBuffer, ackBuffer.length, clientInetAddress, clientPort);
 					socket.send(ackdp);
@@ -99,7 +99,7 @@ public class ReceiveThread implements Runnable {
 					byte[] ackBuffer = ByteConverter.objectToBytes(ackPacket);
 					DatagramPacket ackdp = new DatagramPacket(ackBuffer, ackBuffer.length, clientInetAddress, clientPort);
 					socket.send(ackdp);
-					//System.out.println("ACK(right): " + (expectedseqnum-1) + "——————expect: " + expectedseqnum + "——————get: " + packet.getSeq());
+					System.out.println("ACK(right): " + (expectedseqnum-1) + "——————expect: " + expectedseqnum + "——————get: " + packet.getSeq());
 					// 阻塞等待下一个数据包
 					socket.receive(dp);
 				}
