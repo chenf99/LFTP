@@ -25,15 +25,17 @@ public class SendThread implements Runnable {
 	private DatagramSocket socket;					//用于发送数据包
 	private volatile boolean retrans= false;		//当前是否在重传
 	private volatile int currAck = -1;				//已被确认的最大分组ack
+	private String fileName;						//文件名
 	
 	
 	
-	public SendThread(List<Packet> data, InetAddress address, int sourcePort, int destPort) {
+	public SendThread(List<Packet> data, InetAddress address, int sourcePort, int destPort, String fileName) {
 		this.data = data;
 		this.address = address;
 		this.sourcePort = sourcePort;
 		this.destPort = destPort;
 		this.date = new Date();
+		this.fileName = fileName;
 		try {
 			this.socket = new DatagramSocket(sourcePort);
 		} catch (SocketException e) {
@@ -80,7 +82,7 @@ public class SendThread implements Runnable {
 			if (currAck == data.size() - 1) {
 				try {
 					System.out.print("发送终止packet");
-					byte[] buffer = ByteConverter.objectToBytes(new Packet(-1, -1, false, true, -1, null));
+					byte[] buffer = ByteConverter.objectToBytes(new Packet(-1, -1, false, true, -1, null, fileName));
 					DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
 					socket.send(dp);
 					System.out.println("发送完毕");
