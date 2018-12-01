@@ -15,10 +15,11 @@ import tools.*;
 public class Client {
 	
 	public static void main(String[] args) {
-    	String dir = "test.zip";
+    	String dir = "test.txt";
     	String address = "localhost";
-    	int port = 3888;
-    	System.out.println("正在往 " + address + ":" + port + " 传送文件: " + dir);
+    	int sourcePort = 3777;
+    	int dstPort = 3888;
+    	System.out.println("正在往 " + address + ":" + dstPort + " 传送文件: " + dir);
     	List<byte[]> byteList = FileIO.file2byte(dir);
     	List<Packet> packageList = new ArrayList<>();
     	Packet data;
@@ -29,7 +30,7 @@ public class Client {
     	try {
     		System.out.println("准备传输：");
         	InetAddress ia = InetAddress.getByName(address);
-        	Thread send_thread = new Thread(new SendThread(packageList, ia, port));
+        	Thread send_thread = new Thread(new SendThread(packageList, ia, sourcePort, dstPort));
         	send_thread.start();
 		} catch (Exception e) {
 			// TODO: handle exception

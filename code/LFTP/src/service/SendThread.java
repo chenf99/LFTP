@@ -31,6 +31,7 @@ public class SendThread implements Runnable {
 		this.address = address;
 		this.sourcePort = sourcePort;
 		this.destPort = destPort;
+		this.date = new Date();
 		try {
 			this.socket = new DatagramSocket(sourcePort);
 		} catch (SocketException e) {
@@ -46,6 +47,10 @@ public class SendThread implements Runnable {
 		//启动接收ACK包线程
 		Thread recv_ack_thread = new Thread(new RecvAck());
 		recv_ack_thread.start();
+		
+		// 启动超时判断处理线程
+		Thread time_out_threadThread = new Thread(new TimeOut());
+		time_out_threadThread.start();
 		
 		//启动发送数据包
 		try {
@@ -101,14 +106,17 @@ public class SendThread implements Runnable {
 	}
 	
 	//判断是否超时的线程
-	class IimeOut implements Runnable {
+	class TimeOut implements Runnable {
 		@Override
 		public void run() {
 			while (true) {
 				long start_time = date.getTime();
 				long curr_time = new Date().getTime();
 				//超过3秒时触发超时
-				if (curr_time - start_time > 3000) timeOut();
+				if (curr_time - start_time > 3000) {
+					System.out.println("启动重传！");
+					timeOut();
+				}
 				
 				//确认接收最后一个分组时停止计时
 				if (base == nextSeq) break;
