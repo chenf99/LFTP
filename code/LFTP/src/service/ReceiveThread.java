@@ -28,13 +28,15 @@ public class ReceiveThread implements Runnable {
 			DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 			socket.receive(dp);
 			int seq = 0;
-			while (dp.getLength() != 0) {
+			while (true) {
 				Packet packet = ByteConverter.bytesToObject(buffer);
+				//接收到发送完成的信号数据包，跳出循环
+				if (packet.isFIN() == true) break;
 				data.add(packet.getData());
 				System.out.println("接收片段：" + packet.getSeq());
 				socket.receive(dp);
 			}
-			String dirString = "output.mp4";
+			String dirString = "output.zip";
 			FileIO.byte2file(dirString, data);
 			System.out.println("接收并写入完毕！");
 		}
