@@ -115,6 +115,14 @@ public class SendThread implements Runnable {
 					base = packet.getAck() + 1;
 					currAck = packet.getAck();
 					rwnd = packet.getRwwd();
+					
+					//接收方缓存已满，继续发送一个只有一个字节数据的报文段
+					if (rwnd == 0) {
+						byte[] tmp = ByteConverter.objectToBytes(new Packet(-1, -1, false, false, -1, null, fileName));
+						DatagramPacket tmpPack = new DatagramPacket(tmp, tmp.length, address, destPort);
+						socket.send(tmpPack);
+					}
+					
 					if (base != nextSeq) startTimer();
 					
 					//确认接收最后一个分组

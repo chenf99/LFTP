@@ -44,10 +44,11 @@ public class FileIO {
             return null;
         }
     }
-
+	
+	// List<byte[]> 数据存入文件中(直接追加内容)
     public static void byte2file(String path,List<byte[]> datas) {
         try {
-            FileOutputStream outputStream  =new FileOutputStream(new File(path));
+            FileOutputStream outputStream  =new FileOutputStream(new File(path), true);
             for(int i = 0; i < datas.size(); i++) {
             	outputStream.write(datas.get(i));
             	outputStream.flush();
@@ -78,6 +79,7 @@ public class FileIO {
     		return 0;
     	}
     }
+    
     
 
     public static void main(String[] args) {

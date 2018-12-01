@@ -15,7 +15,7 @@ import tools.*;
 public class Client {
 	
 	public static void main(String[] args) {
-    	String dir = "test.txt";
+    	String dir = "test.mp4";
     	String address = "localhost";
     	int sourcePort = 3777;
     	int dstPort = 3888;
@@ -36,14 +36,15 @@ public class Client {
         	InetAddress ia = InetAddress.getByName(address);
         	Thread send_thread = new Thread(new SendThread(packageList, ia, sourcePort, dstPort, fileName));
         	send_thread.start();
+        	send_thread.join();
+        	System.exit(0);
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
     	
+    	
+    	
 	}
     
-    public void run() {
-    	
-    }
 }
