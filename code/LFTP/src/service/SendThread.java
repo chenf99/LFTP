@@ -5,11 +5,16 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 
+
+
+
 import tools.ByteConverter;
+import tools.FileIO;
 import tools.Packet;
 
 public class SendThread implements Runnable {
@@ -29,19 +34,22 @@ public class SendThread implements Runnable {
 	private volatile boolean retrans = false;		//当前是否在重传
 	private volatile int lastAcked = -1;			//最后一个被确认的分组ack
 	private volatile int rwnd = 1024;				//接收方空闲缓存空间
+	private String filePath;						//文件路径
 	private String fileName;						//文件名
 	private volatile boolean status;					//拥塞控制状态
 	private volatile double threshold = 50;			//拥塞控制窗口阈值
 	private volatile int dupliACK = 0;					//冗余ACK数
+	private int blockTotal;							//文件的传输区块数
+	private int bytesTotal; 						//文件总的传输byte[]数目
 	
 	
-	public SendThread(List<Packet> data, InetAddress address, int sourcePort, int destPort, String fileName) {
-		this.data = data;
+	public SendThread(InetAddress address, int sourcePort, int destPort, String filePath) {
+		this.data = null;
 		this.address = address;
 		this.sourcePort = sourcePort;
 		this.destPort = destPort;
 		this.date = new Date();
-		this.fileName = fileName;
+		this.filePath = filePath;
 		this.status = SS;
 		try {
 			this.socket = new DatagramSocket(sourcePort);
@@ -54,6 +62,13 @@ public class SendThread implements Runnable {
 	@Override
 	public void run() {
 		//System.out.println("size: " + data.size());
+		// 获得文件的区块数目
+		blockTotal = FileIO.getBlockLength(filePath);
+		// 获得文件总共传输的byte[]数目
+		bytesTotal = FileIO.getBufferLength(filePath);
+		// 获得文件名
+		fileName = getFileName(filePath);
+		
 		
 		//启动接收ACK包线程
 		Thread recv_ack_thread = new Thread(new RecvAck());
@@ -66,20 +81,32 @@ public class SendThread implements Runnable {
 		
 		//启动发送数据包
 		try {
-			while (nextSeq < data.size()) {
-				//接收方缓存满
-				if (rwnd <= 0) {
-					//System.out.println("接收方缓存满，暂停发送");
+			// 分区块读取后进行传输
+			for(int blockNum = 0; blockNum < blockTotal; blockNum++) {
+				// 读取一个区块数据
+				List<byte[]> readFileBytes = FileIO.file2bList(filePath, blockNum);
+				data = new ArrayList<>();
+				for(int bytesNum = 0; bytesNum < readFileBytes.size(); bytesNum++) {
+					Packet packet = new Packet(-1, bytesNum + blockNum*FileIO.BYTES_IN_BLOCK, false, false, -1, readFileBytes.get(bytesNum), fileName);
+					data.add(packet);
 				}
-				else if (nextSeq < base + cwnd && retrans == false) {
-					byte[] buffer = ByteConverter.objectToBytes(data.get(nextSeq));
-					DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
-					Packet packet = ByteConverter.bytesToObject(dp.getData());
-					//System.out.println("发送的分组序号: " + packet.getSeq());
-					socket.send(dp);
-					if (base == nextSeq) startTimer();
-					
-					nextSeq++;
+				// 传输这个区块的数据
+				while (nextSeq < data.size() + blockNum * FileIO.BYTES_IN_BLOCK) {
+					//接收方缓存满
+					if (rwnd <= 0) {
+						//System.out.println("接收方缓存满，暂停发送");
+					}
+					else if (nextSeq < base + cwnd && retrans == false) {
+						int byteNumInBlock = nextSeq - blockNum*FileIO.BYTES_IN_BLOCK;
+						byte[] buffer = ByteConverter.objectToBytes(data.get(byteNumInBlock));
+						DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
+						Packet packet = ByteConverter.bytesToObject(dp.getData());
+						//System.out.println("发送的分组序号: " + packet.getSeq());
+						socket.send(dp);
+						if (base == nextSeq) startTimer();
+						
+						nextSeq++;
+					}
 				}
 			}
 		} catch (IOException e) {
@@ -89,7 +116,7 @@ public class SendThread implements Runnable {
 		
 		//传输完成时，发送一个FIN包告知接收方
 		while (true) {
-			if (lastAcked == data.size() - 1 && rwnd > 0) {
+			if (lastAcked == bytesTotal - 1 && rwnd > 0) {
 				try {
 					System.out.println("发送终止packet");
 					byte[] buffer = ByteConverter.objectToBytes(new Packet(-1, -1, false, true, -1, null, fileName));
@@ -168,7 +195,7 @@ public class SendThread implements Runnable {
 					if (base != nextSeq) startTimer();
 					
 					//确认接收最后一个分组
-					if (packet.isACK() && packet.getAck() == data.size() - 1) break;
+					if (packet.isACK() && packet.getAck() == bytesTotal - 1) break;
 				}
 			} catch (IOException e) {
 				System.out.println("ReceiveThread: 接收数据包出错");
@@ -187,7 +214,7 @@ public class SendThread implements Runnable {
 				if (curr_time - start_time > TTL) timeOut();
 				
 				//确认接收最后一个分组时停止计时
-				if (lastAcked == data.size() - 1) break;
+				if (lastAcked == bytesTotal - 1) break;
 			}
 		}
 	}
@@ -222,5 +249,11 @@ public class SendThread implements Runnable {
 	//启动定时器
 	private void startTimer() {
 		date = new Date();
+	}
+	
+	public static String getFileName(String path) {
+    	String[] split_dir = path.split("/");
+    	int split_dir_len = split_dir.length;
+    	return split_dir[split_dir_len-1];
 	}
 }

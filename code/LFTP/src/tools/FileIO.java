@@ -11,13 +11,15 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class FileIO {
+	public static int MAX_BYTE = 1024;//每个byte[]的容量,当前1Kb
+	public static int BLOCK_SIZE = 1024*1024*10;//流划分区块的大小,当前10MB
+	public static int BYTES_IN_BLOCK = BLOCK_SIZE / MAX_BYTE;	// 一个区块byte[]的数目，目前10240
 	
 	// 读取整个文件成List<byte[]>
 	public static List<byte[]> file2byte(String path) {
         try {
             FileInputStream inStream =new FileInputStream(new File(path));
             List<byte[]> datas = new ArrayList<>();
-            final int MAX_BYTE = 1024;	//每个byte[]的容量,当前1Kb
             long streamTotal = 0;  //接受流的容量
             int streamNum = 0;  //流需要分开的数量
             int leave = 0;  //文件剩下的字符数
@@ -53,8 +55,6 @@ public class FileIO {
 		try {
             FileInputStream inStream =new FileInputStream(new File(path));
             List<byte[]> datas = new ArrayList<>();	//返回的区块信息
-            final int MAX_BYTE = 1024;	//流划分byte[]的大小
-            final int BLOCK_SIZE = 1024*1024*10;	//流划分区块的大小
             long streamTotal = 0;	//接受流的容量
             int bytesTotal = 0;  	//流分成满1kb的byte[]的数量
             int blockTotal = 0;	//流分成满10Mb区块block的数量
@@ -138,7 +138,6 @@ public class FileIO {
     	try{
 	    	FileInputStream inStream =new FileInputStream(new File(path));
 	        List<byte[]> datas = new ArrayList<>();
-	        final int BLOCK_SIZE = 1024*1024*10;	//每个block的最大容量,当前10MB
 	        long streamTotal = 0;  //接受流的容量
 	        int blockNum = 0;  //流需要分开的区块数量
 	        // 获得文件输入流的总量
@@ -156,14 +155,20 @@ public class FileIO {
     
 
     public static void main(String[] args) {
-        List<byte[]> datas=file2byte("test.mp4");   
+        /*List<byte[]> datas=file2byte("test.rmvb");   
         System.out.println("readFile succeed!");
-        System.out.println("Total: " + datas.size());
-        
+        System.out.println("Total: " + datas.size());*/
         System.out.println("Total: " + getBufferLength("test.mp4") + "kb.");
         System.out.println("BlockNum: " + getBlockLength("test.mp4"));
+        String dirString = "download";
+		File file = new File(dirString);
+		if(!file.exists()) {
+			file.mkdir();
+		}
         for(int i = 0; i < getBlockLength("test.mp4"); i++) {
-        	datas = file2bList("test.mp4", i);
+        	List<byte[]> datas = file2bList("test.mp4", i);
+        	byte2file("download/test.mp4", datas);
+        	System.out.println("区块" + i + "传输完毕！");
         }
         //byte2file("output.rmvb",datas);
         //System.out.println("saveFile succeed!");

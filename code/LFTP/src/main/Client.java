@@ -15,26 +15,15 @@ import tools.*;
 public class Client {
 	
 	public static void main(String[] args) {
-    	String dir = "test.mp4";
+    	String filePath = "test.mp4";
     	String address = "127.0.0.1";
     	int sourcePort = 3777;
     	int dstPort = 3888;
-    	String fileName;
-    	String[] split_dir = dir.split("/");
-    	int split_dir_len = split_dir.length;
-    	fileName = split_dir[split_dir_len-1];
-    	System.out.println("正在往 " + address + ":" + dstPort + " 传送文件: " + dir);
-    	List<byte[]> byteList = FileIO.file2byte(dir);
-    	List<Packet> packageList = new ArrayList<>();
-    	Packet data;
-    	for(int i = 0; i < byteList.size(); i++) {
-    		data = new Packet(0, i, false, false, 50, byteList.get(i), fileName);
-    		packageList.add(data);
-    	}
+    	System.out.println("正在往 " + address + ":" + dstPort + " 传送文件: " + filePath);
     	try {
     		System.out.println("准备传输：");
         	InetAddress ia = InetAddress.getByName(address);
-        	Thread send_thread = new Thread(new SendThread(packageList, ia, sourcePort, dstPort, fileName));
+        	Thread send_thread = new Thread(new SendThread(ia, sourcePort, dstPort, filePath));
         	send_thread.start();
         	send_thread.join();
         	System.exit(0);
