@@ -16,14 +16,15 @@ import tools.Packet;
 
 public class ReceiveThread implements Runnable {
 	private final static int BUFSIZE = 1024 * 1024;
-	private DatagramSocket socket;				// UDP连接DatagramSocket
-	private int serverPort;						// 服务端接收端口
-	private int expectedseqnum;					// 期望收到的序列号
-	InetAddress clientInetAddress;				// 客户端发送IP地址
-	int clientPort;								// 客户端发送端口
-	String fileName;							// 客户端发送的文件名
-	int rwnd = 1024 * 10;						// 服务器接受窗口为10Mb，用于流量控制
-	String dir = "server/"	;					// 服务端存储位置
+	private final static int MAX_RWND = 1024 * 10;	// 服务器接受窗口为10Mb，用于流量控制
+	private DatagramSocket socket;					// UDP连接DatagramSocket
+	private int serverPort;							// 服务端接收端口
+	private int expectedseqnum;						// 期望收到的序列号
+	InetAddress clientInetAddress;					// 客户端发送IP地址
+	int clientPort;									// 客户端发送端口
+	String fileName;								// 客户端发送的文件名
+	int rwnd = MAX_RWND;						
+	String dir = "server/"	;						// 服务端存储位置
 	
 	public ReceiveThread(int port) {
 		this.serverPort = port;
@@ -75,15 +76,15 @@ public class ReceiveThread implements Runnable {
 				if(rwnd == 0) {
 					String dirString = "server/" + fileName;
 					FileIO.byte2file(dirString, data);
-					System.out.println("窗口满了，写入一次！");
+					System.out.println("窗口满了，写入 " + MAX_RWND / 1024 + "Mb数据.");
 					// 清空List，重置接收窗口空闲空间
 					data.clear();
-					rwnd = 1024;
+					rwnd = MAX_RWND;
 					Packet ackPacket = new Packet(expectedseqnum-1, -1, false, false, rwnd, null, fileName);
 					byte[] ackBuffer = ByteConverter.objectToBytes(ackPacket);
 					DatagramPacket ackdp = new DatagramPacket(ackBuffer, ackBuffer.length, clientInetAddress, clientPort);
 					socket.send(ackdp);
-					System.out.println("ACK(rwnd): " + (expectedseqnum-1) + "——————expect: " + expectedseqnum);
+					//System.out.println("ACK(rwnd): " + (expectedseqnum-1) + "——————expect: " + expectedseqnum);
 				}
 				// 接收到期望收到的数据包
 				else if(packet.getSeq() == expectedseqnum) {
@@ -99,9 +100,7 @@ public class ReceiveThread implements Runnable {
 					byte[] ackBuffer = ByteConverter.objectToBytes(ackPacket);
 					DatagramPacket ackdp = new DatagramPacket(ackBuffer, ackBuffer.length, clientInetAddress, clientPort);
 					socket.send(ackdp);
-					System.out.println("ACK(right): " + (expectedseqnum-1) + "——————expect: " + expectedseqnum + "——————get: " + packet.getSeq());
-					// 阻塞等待下一个数据包
-					socket.receive(dp);
+					//System.out.println("ACK(right): " + (expectedseqnum-1) + "——————expect: " + expectedseqnum + "——————get: " + packet.getSeq());
 				}
 				// 接受到非期望数据包
 				else {
@@ -110,10 +109,10 @@ public class ReceiveThread implements Runnable {
 					byte[] ackBuffer = ByteConverter.objectToBytes(ackPacket);
 					DatagramPacket ackdp = new DatagramPacket(ackBuffer, ackBuffer.length, clientInetAddress, clientPort);
 					socket.send(ackdp);
-					System.out.println("ACK(wrong): " + (expectedseqnum-1) + "——————expect: " + expectedseqnum + "——————get: " + packet.getSeq());
-					// 阻塞等待下一个数据包
-					socket.receive(dp);
+					//System.out.println("ACK(wrong): " + (expectedseqnum-1) + "——————expect: " + expectedseqnum + "——————get: " + packet.getSeq());
 				}
+				// 阻塞等待下一个数据包
+				socket.receive(dp);
 			}
 			String dirString = dir + fileName;
 			FileIO.byte2file(dirString, data);

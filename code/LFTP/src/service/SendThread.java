@@ -70,13 +70,13 @@ public class SendThread implements Runnable {
 			while (nextSeq < data.size()) {
 				//接收方缓存满
 				if (rwnd <= 0) {
-					System.out.println("接收方缓存满，暂停发送");
+					//System.out.println("接收方缓存满，暂停发送");
 				}
 				else if (nextSeq < base + cwnd && retrans == false) {
 					byte[] buffer = ByteConverter.objectToBytes(data.get(nextSeq));
 					DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
 					Packet packet = ByteConverter.bytesToObject(dp.getData());
-					System.out.println("发送的分组序号: " + packet.getSeq());
+					//System.out.println("发送的分组序号: " + packet.getSeq());
 					socket.send(dp);
 					if (base == nextSeq) startTimer();
 					
@@ -117,7 +117,7 @@ public class SendThread implements Runnable {
 					DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 					socket.receive(dp);
 					Packet packet = ByteConverter.bytesToObject(buffer);
-					System.out.println("确认分组: " + packet.getAck());
+					//System.out.println("确认分组: " + packet.getAck());
 					
 					if (packet.isACK() == true && lastAcked + 1 == packet.getAck()) {
 						//接收到正确的ACK包
@@ -152,18 +152,19 @@ public class SendThread implements Runnable {
 						@Override
 						public void run() {
 							while (rwnd == 0) {
-								byte[] tmp = ByteConverter.objectToBytes(new Packet(-1, -1, false, false, -1, null, fileName));
-								DatagramPacket tmpPack = new DatagramPacket(tmp, tmp.length, address, destPort);
 								try {
+									Thread.sleep(1000);
+									byte[] tmp = ByteConverter.objectToBytes(new Packet(-1, -1, false, false, -1, null, fileName));
+									DatagramPacket tmpPack = new DatagramPacket(tmp, tmp.length, address, destPort);
 									socket.send(tmpPack);
 								} catch (IOException e) {
+									e.printStackTrace();
+								} catch (InterruptedException e) {
 									e.printStackTrace();
 								}
 							}
 						}
 					}).start();
-					
-					
 					
 					if (base != nextSeq) startTimer();
 					
@@ -197,17 +198,19 @@ public class SendThread implements Runnable {
 		threshold = cwnd / 2;
 		cwnd = threshold;
 		status = SS;
-		System.out.println("启动重传！");
+		//System.out.println("启动重传！");
 		startTimer();
 		try {
 			//记录base值和nextSeq值，防止接收线程对其造成改变
 			int myBase = base, myNextSeq = nextSeq;
 			retrans = true;
 			for (int i = myBase; i < myNextSeq; ++i) {
-				while (rwnd <= 0) System.out.println("接收方缓存不够，暂停重传"); 
+				while (rwnd <= 0) {
+					//System.out.println("接收方缓存不够，暂停重传"); 
+				}
 				byte[] buffer = ByteConverter.objectToBytes(data.get(i));
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
-				System.out.println("重新发送片段：" + i);
+				//System.out.println("重新发送片段：" + i);
 				socket.send(dp);
 			}
 			retrans = false;
