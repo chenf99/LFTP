@@ -8,7 +8,6 @@ import java.net.SocketException;
 import java.util.Date;
 import java.util.List;
 
-import com.sun.xml.internal.bind.v2.model.core.ID;
 
 import tools.ByteConverter;
 import tools.Packet;

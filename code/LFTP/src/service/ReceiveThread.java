@@ -96,7 +96,7 @@ public class ReceiveThread implements Runnable {
 					rwnd--;
 					//System.out.println("接收片段：" + packet.getSeq());
 					// 返回一个正确接受的ACK包
-					Packet ackPacket = new Packet(expectedseqnum, -1, true, false, rwnd, null, fileName);
+					Packet ackPacket = new Packet(expectedseqnum-1, -1, true, false, rwnd, null, fileName);
 					byte[] ackBuffer = ByteConverter.objectToBytes(ackPacket);
 					DatagramPacket ackdp = new DatagramPacket(ackBuffer, ackBuffer.length, clientInetAddress, clientPort);
 					socket.send(ackdp);

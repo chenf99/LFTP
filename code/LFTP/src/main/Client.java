@@ -16,7 +16,7 @@ public class Client {
 	
 	public static void main(String[] args) {
     	String dir = "test.mp4";
-    	String address = "localhost";
+    	String address = "127.0.0.1";
     	int sourcePort = 3777;
     	int dstPort = 3888;
     	String fileName;
