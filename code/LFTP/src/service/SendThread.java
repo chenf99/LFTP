@@ -41,6 +41,7 @@ public class SendThread implements Runnable {
 	private volatile int dupliACK = 0;					//冗余ACK数
 	private int blockTotal;							//文件的传输区块数
 	private int bytesTotal; 						//文件总的传输byte[]数目
+	private volatile int blockNum;					//当前正在进行传输的区块号
 	
 	
 	public SendThread(InetAddress address, int sourcePort, int destPort, String filePath) {
@@ -61,7 +62,6 @@ public class SendThread implements Runnable {
 
 	@Override
 	public void run() {
-		//System.out.println("size: " + data.size());
 		// 获得文件的区块数目
 		blockTotal = FileIO.getBlockLength(filePath);
 		// 获得文件总共传输的byte[]数目
@@ -82,7 +82,7 @@ public class SendThread implements Runnable {
 		//启动发送数据包
 		try {
 			// 分区块读取后进行传输
-			for(int blockNum = 0; blockNum < blockTotal; blockNum++) {
+			for(blockNum = 0; blockNum < blockTotal; blockNum++) {
 				// 读取一个区块数据
 				List<byte[]> readFileBytes = FileIO.file2bList(filePath, blockNum);
 				data = new ArrayList<>();
@@ -97,15 +97,17 @@ public class SendThread implements Runnable {
 						//System.out.println("接收方缓存满，暂停发送");
 					}
 					else if (nextSeq < base + cwnd && retrans == false) {
+						//if(nextSeq%10000 != 777){//人为丢包
 						int byteNumInBlock = nextSeq - blockNum*FileIO.BYTES_IN_BLOCK;
 						byte[] buffer = ByteConverter.objectToBytes(data.get(byteNumInBlock));
 						DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
 						Packet packet = ByteConverter.bytesToObject(dp.getData());
 						//System.out.println("发送的分组序号: " + packet.getSeq());
 						socket.send(dp);
+						//}
 						if (base == nextSeq) startTimer();
-						
 						nextSeq++;
+						
 					}
 				}
 			}
@@ -234,7 +236,8 @@ public class SendThread implements Runnable {
 				while (rwnd <= 0) {
 					//System.out.println("接收方缓存不够，暂停重传"); 
 				}
-				byte[] buffer = ByteConverter.objectToBytes(data.get(i));
+				int bytesNumInBlock = i - blockNum*FileIO.BYTES_IN_BLOCK;
+				byte[] buffer = ByteConverter.objectToBytes(data.get(bytesNumInBlock));
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
 				//System.out.println("重新发送片段：" + i);
 				socket.send(dp);
