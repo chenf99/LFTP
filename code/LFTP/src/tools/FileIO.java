@@ -67,7 +67,7 @@ public class FileIO {
             // 获得流文件分开满10Mb区块的数量
             blockTotal = getBlockLength(path);
             // 获得分开成多个登长流文件后，最后剩余的流大小
-            leave = (int)streamTotal%MAX_BYTE;
+            leave = (int)(streamTotal%MAX_BYTE);
             
             // 请求区块号不匹配
             if(blockNum < 0 || blockNum > blockTotal) return datas;
@@ -157,7 +157,7 @@ public class FileIO {
     public static void main(String[] args) {
     	
     	
-    	String path = "C:/Users/chenbb/Desktop/test.mp4";
+    	String path = "C:/Users/chenbb/Desktop/test.zip";
         System.out.println("Total: " + getBufferLength(path) + "kb.");
         System.out.println("BlockNum: " + getBlockLength(path));
         String dirString = "download";
@@ -168,7 +168,7 @@ public class FileIO {
 		
 		for(int i = 0; i < getBlockLength(path); i++) {
         	List<byte[]> datas = file2bList(path, i);
-        	byte2file("download/test.mp4", datas);
+        	byte2file("download/test.zip", datas);
         	System.out.println("区块" + i + "传输完毕！");
         }
         
