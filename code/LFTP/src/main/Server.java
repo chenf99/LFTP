@@ -84,6 +84,15 @@ public class Server {
 					//创建数据端口
 					dataPort = 30000 + (int)(Math.random() * 1000);
 					message = "dataport:" + dataPort;
+					
+					//创建接收线程
+					File dir = new File("server/");
+					if (!dir.exists()) {
+						dir.mkdir();
+					}
+					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + fileName, address, port + 1));
+					recv_thread.start();
+					//告知客户端接收线程开启以及数据端口
 					//告知客户端数据端口
 					send_packet = new DatagramPacket(message.getBytes(), message.getBytes().length, address, port);
 					try {
@@ -91,11 +100,6 @@ public class Server {
 					} catch (IOException e) {
 						System.err.println("[ERROR]发送数据包出错: " + e.getMessage());
 					}
-					
-					//创建接收线程
-					
-					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + fileName, address, port));
-					recv_thread.start();
 					break;
 				case "listall":
 					File file=new File("server/");

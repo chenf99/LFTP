@@ -80,22 +80,27 @@ public class Client {
 					System.out.println("[INFO]服务器中存在的文件: \n" + result);
 					break;
 				case "lget":
-					//启动接收线程
+					//启动接收线程,此时服务器端发送线程还未开启
 					message = new String(buffer, 0, rcv_packet.getLength());
 					InetAddress sendInetAddress = rcv_packet.getAddress();
 					String dataPort = message.substring(message.indexOf(":")+1);
 					System.out.println("[INFO]服务器数据端口: " + dataPort);
-					File dir = new File("download//");
+					File dir = new File("download/");
 					if (!dir.exists()) {
 						dir.mkdir();
 					}
-					Thread rcv_thread = new Thread(new ReceiveThread(port + 1, "download//" + fileName, sendInetAddress, Integer.parseInt(dataPort)));
+					Thread rcv_thread = new Thread(new ReceiveThread(port + 1, "download/" + fileName, sendInetAddress, Integer.parseInt(dataPort)));
 					rcv_thread.start();
 					//发送一个包到服务器数据端口，告知接收线程开启
 					socket.send(new DatagramPacket(new byte[1], 1, sendInetAddress, Integer.parseInt(dataPort) - 1));
 					break;
 				case "lsend":
-					//启动发送线程
+					//启动发送线程,此时服务器端接收线程已开启
+					message = new String(buffer, 0, rcv_packet.getLength());
+					InetAddress serverAddress = rcv_packet.getAddress();
+					dataPort = message.substring(message.indexOf(":")+1);
+					Thread send_thread = new Thread(new SendThread(serverAddress, port + 1, Integer.parseInt(dataPort), fileName));
+					send_thread.start();
 					break;
 				default:
 					System.err.println("[ERROR]无效命令");
