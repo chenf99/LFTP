@@ -71,8 +71,8 @@ public class SendThread implements Runnable {
 		blockTotal = FileIO.getBlockLength(filePath);
 		// 获得文件总共传输的byte[]数目
 		bytesTotal = FileIO.getBufferLength(filePath);
-		System.out.println("[INFO]正在往" + address.toString() + ":" + destPort + "发送" + filePath);
-		System.out.println("[INFO]---总kb数: "+ bytesTotal + "---总区块号: "+ blockTotal);
+		System.out.println("[INFO]正在往" + address.toString().substring(1) + ":" + destPort + "发送" + filePath);
+		System.out.println("[INFO]文件大小: "+ bytesTotal + "kb");
 		// 如果是客户端发送文件，显示进度条信息
 		final Date startTiame = new Date();
 		Thread percentageThread = new Thread(new Runnable() {
@@ -130,6 +130,10 @@ public class SendThread implements Runnable {
 				}
 				//确认接收完这个区块的数据
 				while (lastAcked < data.size() - 1 + blockNum * FileIO.BYTES_IN_BLOCK) {}
+				
+				// 回收这个区块数据的内存
+				readFileBytes = null;
+				System.gc();
 			}
 		} catch (IOException e) {
 			System.out.println("SendThread: 发送数据包出错");
@@ -161,7 +165,7 @@ public class SendThread implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("[INFO]往" + address.toString() + ":" + destPort + "传输" + filePath + "完毕.");
+		System.out.println("[INFO]往" + address.toString().substring(1) + ":" + destPort + "传输" + filePath + "完毕");
 	
 	}
 	

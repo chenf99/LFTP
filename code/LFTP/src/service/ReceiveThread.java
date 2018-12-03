@@ -64,7 +64,7 @@ public class ReceiveThread implements Runnable {
 			/*// 获取客户端IP和发送端口
 			setClientInetAddress(dp.getAddress());
 			setClientPort(dp.getPort());*/
-			System.out.println("发送方地址---" + sendInetAddress.toString().substring(1) + ":" + sendPort);
+			System.out.println("[INFO]发送方地址---" + sendInetAddress.toString().substring(1) + ":" + sendPort);
 			String[] fileStringList = downloadDir.split("/");
 			String fileName = fileStringList[fileStringList.length - 1];
 			
@@ -89,7 +89,7 @@ public class ReceiveThread implements Runnable {
 				Packet packet = ByteConverter.bytesToObject(buffer);
 				// 从第一个数据包中获取发送的文件名,并清空服务端的文件内容
 				if(expectedseqnum == 0) {
-					System.out.println("文件名---" + fileName);
+					System.out.println("[INFO]文件名---" + fileName);
 			        File file=new File(downloadDir);
 			         if(file.exists()&&file.isFile()) {
 			             file.delete();
@@ -101,8 +101,10 @@ public class ReceiveThread implements Runnable {
 				if(rwnd == 0) {
 					FileIO.byte2file(downloadDir, data);
 					//System.out.println("窗口满了，写入 " + MAX_RWND / 1024 + "Mb数据.");
-					// 清空List，重置接收窗口空闲空间
-					data.clear();
+					// 清空List,回收内存，重置接收窗口空闲空间
+					data = null;
+					System.gc();
+					data = new ArrayList<>();
 					rwnd = MAX_RWND;
 					Packet ackPacket = new Packet(expectedseqnum-1, -1, false, false, rwnd, null);
 					byte[] ackBuffer = ByteConverter.objectToBytes(ackPacket);
@@ -142,7 +144,7 @@ public class ReceiveThread implements Runnable {
 			if(isClient) {
 				percentageThread.join();
 			}
-			System.out.println("接收并写入完毕！");
+			System.out.println("[INFO]成功接收文件" + fileName);
 		}
 		catch (SocketException e) {
 			System.out.println("ReceiveThread: 创建socket出错");

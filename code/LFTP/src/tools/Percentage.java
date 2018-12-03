@@ -39,7 +39,7 @@ public class Percentage {
 		// TODO：展示平均速度
 		int speed = getAverageSpeed(fileSize, date, ackNum);
 		String speedMessage = speed + "kb/s";
-		while(speedMessage.length()<16) speedMessage+=" ";//补全对齐
+		while(speedMessage.length()<12) speedMessage+=" ";//补全对齐
 		System.out.print(speedMessage);
 		
 		// TODO： 展示剩余时间
@@ -63,7 +63,7 @@ public class Percentage {
 		if(after <= 0) return 0;
 		// 一个都还没接收
 		if(ackNum < 0) return 0;
-		return (int)((ackNum+1) * 1000 / after);
+		return (int)((long)(ackNum+1) * 1000 / after);
 	}
 	
 	// 时间转换，将秒数(int)转换成字符串表达
@@ -76,10 +76,11 @@ public class Percentage {
 		if(min == 0) resultString = second+"s";
 		else if(hour == 0) resultString =  min+"m"+second+"s";
 		else resultString = hour+"h"+min+"m"+second+"s";
-		while (resultString.length() < 9) resultString += " ";//补全对齐
+		while (resultString.length() < 16) resultString += " ";//补全对齐
 		return resultString;
 		
 	}
+	
 	
 	
 }

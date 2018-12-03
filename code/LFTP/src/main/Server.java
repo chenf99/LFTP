@@ -45,7 +45,7 @@ public class Server {
 				System.err.println("[ERROR]接收数据包出错: " + e.getMessage());
 			}
 			String message = new String(buffer, 0, rcv_packet.getLength());
-			System.out.println(message);
+			System.out.println("[cmd]" + message);
 			String operation = message.substring(0, message.indexOf(" "));
 			String fileName = message.substring(message.indexOf(" ") + 1);
 			//获得客户端的地址和端口
