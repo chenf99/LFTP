@@ -89,7 +89,6 @@ public class ReceiveThread implements Runnable {
 				Packet packet = ByteConverter.bytesToObject(buffer);
 				// 从第一个数据包中获取发送的文件名,并清空服务端的文件内容
 				if(expectedseqnum == 0) {
-					System.out.println("[INFO]文件名---" + fileName);
 			        File file=new File(downloadDir);
 			         if(file.exists()&&file.isFile()) {
 			             file.delete();
