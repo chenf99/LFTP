@@ -92,7 +92,11 @@ public class Server {
 					if (!dir.exists()) {
 						dir.mkdir();
 					}
-					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + fileName, address, port + 1, false, 0));
+					// 由于用户输入传输的"文件名"可能是"./data/test.mp4"这样的
+					// 我们来获取真实的纯文件名"test.mp4"
+					String[] fileNames =  fileName.split("/");
+					String realFileName = fileNames[fileNames.length-1];
+					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + realFileName, address, port + 1, false, 0));
 					recv_thread.start();
 					//告知客户端接收线程开启以及数据端口
 					//告知客户端数据端口
