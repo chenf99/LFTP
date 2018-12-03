@@ -13,9 +13,13 @@ import java.util.List;
 
 
 
+
+
+
 import tools.ByteConverter;
 import tools.FileIO;
 import tools.Packet;
+import tools.Percentage;
 
 public class SendThread implements Runnable {
 	private final static int BUFSIZE = 1024 * 1024;
@@ -41,7 +45,7 @@ public class SendThread implements Runnable {
 	private int blockTotal;							//文件的传输区块数
 	private int bytesTotal; 						//文件总的传输byte[]数目
 	private volatile int blockNum;					//当前正在进行传输的区块号
-	private boolean isClient;
+	private boolean isClient;						//线程是否由客户端建立
 	
 	
 	public SendThread(InetAddress address, int sourcePort, int destPort, String filePath, boolean isClient) {
@@ -69,7 +73,20 @@ public class SendThread implements Runnable {
 		bytesTotal = FileIO.getBufferLength(filePath);
 		System.out.println("[INFO]正在往" + address.toString() + ":" + destPort + "发送" + filePath);
 		System.out.println("[INFO]---总kb数: "+ bytesTotal + "---总区块号: "+ blockTotal);
-		
+		// 如果是客户端发送文件，显示进度条信息
+		final Date startTiame = new Date();
+		Thread percentageThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while(lastAcked < bytesTotal-1) {
+					Percentage.showPercentage(bytesTotal, startTiame, lastAcked);
+				}
+				Percentage.showPercentage(bytesTotal, startTiame, lastAcked);
+			}
+		});
+		if(isClient){
+			percentageThread.start();
+		}
 		
 		//启动接收ACK包线程
 		Thread recv_ack_thread = new Thread(new RecvAck());
@@ -137,6 +154,13 @@ public class SendThread implements Runnable {
 		}
 		
 		// 结束传输
+		if(isClient) {
+			try {
+				percentageThread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		System.out.println("[INFO]往" + address.toString() + ":" + destPort + "传输" + filePath + "完毕.");
 	
 	}

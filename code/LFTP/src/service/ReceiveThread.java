@@ -8,7 +8,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
 import tools.Percentage;
 import tools.ByteConverter;
 import tools.FileIO;
@@ -63,16 +65,23 @@ public class ReceiveThread implements Runnable {
 			setClientInetAddress(dp.getAddress());
 			setClientPort(dp.getPort());*/
 			System.out.println("发送方地址---" + sendInetAddress.toString().substring(1) + ":" + sendPort);
-			
-			//int fileSize = FileIO.getBufferLength(downloadDir);
-		/*	new Thread(new Runnable()  {
-				@Override
-				public void run() {
-					Percentage.showPercentage(fileSize, date, ackNum);
-				}
-			});*/
 			String[] fileStringList = downloadDir.split("/");
 			String fileName = fileStringList[fileStringList.length - 1];
+			
+			final Date startTime = new Date();
+			//如果是客户端接收文件，显示进度条信息
+			Thread percentageThread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					while(expectedseqnum < fileSize) {
+						Percentage.showPercentage(fileSize, startTime, expectedseqnum-1);
+					}
+					Percentage.showPercentage(fileSize, startTime, expectedseqnum-1);
+				}
+			});
+			if(isClient){
+				percentageThread.start();
+			}
 			
 			
 			while (true) {		
@@ -91,7 +100,7 @@ public class ReceiveThread implements Runnable {
 				// 判断当前rwnd窗口是否已满，满了进行文件写入
 				if(rwnd == 0) {
 					FileIO.byte2file(downloadDir, data);
-					System.out.println("窗口满了，写入 " + MAX_RWND / 1024 + "Mb数据.");
+					//System.out.println("窗口满了，写入 " + MAX_RWND / 1024 + "Mb数据.");
 					// 清空List，重置接收窗口空闲空间
 					data.clear();
 					rwnd = MAX_RWND;
@@ -130,6 +139,9 @@ public class ReceiveThread implements Runnable {
 				socket.receive(dp);
 			}
 			FileIO.byte2file(downloadDir, data);
+			if(isClient) {
+				percentageThread.join();
+			}
 			System.out.println("接收并写入完毕！");
 		}
 		catch (SocketException e) {
@@ -137,6 +149,9 @@ public class ReceiveThread implements Runnable {
 			e.printStackTrace();
 		} catch (IOException e) {
 			System.out.println("ReceiveThread: 接收数据包出错");
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			System.out.println("ReceiveThread: 进度线程出错");
 			e.printStackTrace();
 		}
 	}

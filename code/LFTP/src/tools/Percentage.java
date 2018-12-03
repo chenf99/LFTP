@@ -9,10 +9,13 @@ public class Percentage {
 	
 	// fileSize为文件大小(kb)，也即要传送的数据包的最大seq(1kb一个数据包)
 	// date为整个文件传输开始的Date时间，也即发送方发送seq=0的时间
-	// ackNum为当前传输已经完成的数据包seq
+	// ackNum为当前传输已经完成的数据包最大seq(zero-base)
 	public static void showPercentage(int fileSize, Date date, int ackNum) {
 		// TODO:展示进度百分比
-		float percentage = (float)ackNum * 100 / (float)fileSize;
+		float percentage = 0;
+		if(ackNum>=0)
+			percentage = (float)(ackNum+1) * 100 / (float)fileSize;
+		if(percentage > 100) percentage = 100;
 		// 保留百分比进度为两位小数
 		DecimalFormat decimalFormat = new DecimalFormat("0.00");//构造方法的字符格式这里如果小数不足2位,会以0补足.
 		String p = decimalFormat.format(percentage);//format 返回的是字符串
@@ -42,11 +45,13 @@ public class Percentage {
 		// TODO： 展示剩余时间
 		String remainTime = timeTransform(getRemainTime(fileSize, date, ackNum));
 		System.out.print(remainTime);
+		if(percentage >= 100) System.out.println();
 	}
 	
 	// 按照平均速度计算剩余需要的时间
 	public static int getRemainTime(int fileSize, Date date, int ackNum) {
 		int speed = getAverageSpeed(fileSize, date, ackNum);
+		if(speed == 0) return 24*60*60+1;
 		return (fileSize-ackNum)/speed;
 	}
 	
@@ -55,7 +60,10 @@ public class Percentage {
 		long startTime = date.getTime();
 		long nowTime = new Date().getTime();
 		long after = nowTime - startTime;
-		return (int)(ackNum * 1000 / after);
+		if(after <= 0) return 0;
+		// 一个都还没接收
+		if(ackNum < 0) return 0;
+		return (int)((ackNum+1) * 1000 / after);
 	}
 	
 	// 时间转换，将秒数(int)转换成字符串表达
