@@ -77,7 +77,7 @@ public class Server {
 					}
 					//没有网络异常时启动发送线程
 					messSocket.close();
-					Thread send_thread = new Thread(new SendThread(address, dataPort, port + 1, "server/" + fileName));
+					Thread send_thread = new Thread(new SendThread(address, dataPort, port + 1, "server/" + fileName, false));
 					send_thread.start();
 					break;
 				case "lsend":
@@ -90,7 +90,7 @@ public class Server {
 					if (!dir.exists()) {
 						dir.mkdir();
 					}
-					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + fileName, address, port + 1));
+					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + fileName, address, port + 1, false));
 					recv_thread.start();
 					//告知客户端接收线程开启以及数据端口
 					//告知客户端数据端口

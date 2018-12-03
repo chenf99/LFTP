@@ -41,15 +41,17 @@ public class SendThread implements Runnable {
 	private int blockTotal;							//文件的传输区块数
 	private int bytesTotal; 						//文件总的传输byte[]数目
 	private volatile int blockNum;					//当前正在进行传输的区块号
+	private boolean isClient;
 	
 	
-	public SendThread(InetAddress address, int sourcePort, int destPort, String filePath) {
+	public SendThread(InetAddress address, int sourcePort, int destPort, String filePath, boolean isClient) {
 		this.data = null;
 		this.address = address;
 		this.sourcePort = sourcePort;
 		this.destPort = destPort;
 		this.date = new Date();
 		this.filePath = filePath;
+		this.isClient = isClient;
 		this.status = SS;
 		try {
 			this.socket = new DatagramSocket(sourcePort);
@@ -65,6 +67,8 @@ public class SendThread implements Runnable {
 		blockTotal = FileIO.getBlockLength(filePath);
 		// 获得文件总共传输的byte[]数目
 		bytesTotal = FileIO.getBufferLength(filePath);
+		System.out.println("[INFO]正在往" + address.toString() + ":" + destPort + "发送" + filePath);
+		System.out.println("[INFO]---总kb数: "+ bytesTotal + "---总区块号: "+ blockTotal);
 		
 		
 		//启动接收ACK包线程
@@ -80,9 +84,6 @@ public class SendThread implements Runnable {
 		try {
 			// 分区块读取后进行传输
 			for(blockNum = 0; blockNum < blockTotal; blockNum++) {
-				System.out.println("总kb数: "+bytesTotal);
-				System.out.println("总区块号: "+ blockTotal);
-				System.out.println("区块号: "+ blockNum);
 				// 读取一个区块数据
 				List<byte[]> readFileBytes = FileIO.file2bList(filePath, blockNum);
 				data = new ArrayList<>();
@@ -120,13 +121,13 @@ public class SendThread implements Runnable {
 		
 		//传输完成时，发送一个FIN包告知接收方
 		while (true) {
-			if (lastAcked == bytesTotal && rwnd > 0) {
+			if (lastAcked == bytesTotal - 1 && rwnd > 0) {
 				try {
-					System.out.println("发送终止packet");
+					//System.out.println("发送终止packet");
 					byte[] buffer = ByteConverter.objectToBytes(new Packet(-1, -1, false, true, -1, null));
 					DatagramPacket dp = new DatagramPacket(buffer, buffer.length, address, destPort);
 					socket.send(dp);
-					System.out.println("发送完毕");
+					//System.out.println("发送完毕");
 				} catch (IOException e) {
 					System.out.println("SendThread: 发送数据包出错");
 					e.printStackTrace();
@@ -134,6 +135,9 @@ public class SendThread implements Runnable {
 				break;
 			}
 		}
+		
+		// 结束传输
+		System.out.println("[INFO]往" + address.toString() + ":" + destPort + "传输" + filePath + "完毕.");
 	
 	}
 	
@@ -199,7 +203,7 @@ public class SendThread implements Runnable {
 					if (base != nextSeq) startTimer();
 					
 					//确认接收最后一个分组
-					if (packet.isACK() && packet.getAck() == bytesTotal) break;
+					if (packet.isACK() && packet.getAck() == bytesTotal - 1) break;
 				}
 			} catch (IOException e) {
 				System.out.println("ReceiveThread: 接收数据包出错");

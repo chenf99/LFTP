@@ -89,7 +89,7 @@ public class FileIO {
             }
             // 请求区块号是不满10Mb的
             else {
-            	for(int i = 0; i < bytesTotal - (BLOCK_SIZE/MAX_BYTE) * (blockTotal-1); i++) {
+            	for(int i = 0; i < bytesTotal-1 - (BLOCK_SIZE/MAX_BYTE) * (blockTotal-1); i++) {
             		byte[] data = new byte[MAX_BYTE];
             		inStream.read(data, 0, MAX_BYTE);
             		datas.add(data);
@@ -100,7 +100,7 @@ public class FileIO {
                 datas.add(data);
             }
             inStream.close();
-            System.out.println("读取区块" + blockNum + "完毕! 区块大小------" + datas.size() + "kb.");
+            //System.out.println("读取区块" + blockNum + "完毕! 区块大小------" + datas.size() + "kb.");
             return datas;
         } catch (Exception e) {
             e.printStackTrace();
@@ -123,14 +123,14 @@ public class FileIO {
         }
     }
     
-    // 获得文件byte[MAX_BYTE]的数量
+    // 获得分成的数据包数量
     public static int getBufferLength(String path) {
     	try{
     		// 获取文件 的总字节数
     		File file = new File(path);
-    		System.out.println(file.length());
+    		//System.out.println(file.length());
     		long streamTotal =  file.length();
-    		return (int)Math.floor(streamTotal/MAX_BYTE);
+    		return (int)Math.floor(streamTotal/MAX_BYTE) + 1;
     	} catch (Exception e) {
     		e.printStackTrace();
     		return 0;

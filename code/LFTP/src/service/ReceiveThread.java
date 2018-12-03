@@ -9,27 +9,29 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
-
+import tools.Percentage;
 import tools.ByteConverter;
 import tools.FileIO;
 import tools.Packet;
 
 public class ReceiveThread implements Runnable {
 	private final static int BUFSIZE = 1024 * 1024;
-	private final static int MAX_RWND = 1024 * 10;	// 服务器接受窗口为10Mb，用于流量控制
+	private final static int MAX_RWND = 1024 * 10;	// 接收方接收窗口为10Mb，用于流量控制
 	private DatagramSocket socket;					// UDP连接DatagramSocket
-	private int recvPort;							// 服务端接收端口
+	private int recvPort;							// 接收方接收端口
 	private int expectedseqnum;						// 期望收到的序列号
 	InetAddress sendInetAddress;					// 发送方IP地址
 	int sendPort;									// 发送方端口
 	int rwnd = MAX_RWND;						
-	String downloadDir;										// 存储位置
+	String downloadDir;								// 存储位置
+	private boolean isClient;						// 该接收线程是否是客户端创建
 	
-	public ReceiveThread(int recvPort, String dir, InetAddress sendInetAddress, int sendPort) {
+	public ReceiveThread(int recvPort, String dir, InetAddress sendInetAddress, int sendPort, boolean isClient) {
 		this.recvPort = recvPort;
 		this.downloadDir = dir;
 		this.sendInetAddress = sendInetAddress;
 		this.sendPort = sendPort;
+		this.isClient = isClient;
 		expectedseqnum = 0;
 	}
 	
@@ -60,12 +62,23 @@ public class ReceiveThread implements Runnable {
 			setClientPort(dp.getPort());*/
 			System.out.println("发送方地址---" + sendInetAddress.toString().substring(1) + ":" + sendPort);
 			
+			//int fileSize = FileIO.getBufferLength(downloadDir);
+		/*	new Thread(new Runnable()  {
+				@Override
+				public void run() {
+					Percentage.showPercentage(fileSize, date, ackNum);
+				}
+			});*/
+			String[] fileStringList = downloadDir.split("/");
+			String fileName = fileStringList[fileStringList.length - 1];
+			
+			
 			while (true) {		
 				// 将收到的数据包转换成封装的Packet
 				Packet packet = ByteConverter.bytesToObject(buffer);
 				// 从第一个数据包中获取发送的文件名,并清空服务端的文件内容
 				if(expectedseqnum == 0) {
-					System.out.println("文件名---" + downloadDir.substring(downloadDir.indexOf("/")));
+					System.out.println("文件名---" + fileName);
 			        File file=new File(downloadDir);
 			         if(file.exists()&&file.isFile()) {
 			             file.delete();

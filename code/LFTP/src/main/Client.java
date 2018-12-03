@@ -89,7 +89,7 @@ public class Client {
 					if (!dir.exists()) {
 						dir.mkdir();
 					}
-					Thread rcv_thread = new Thread(new ReceiveThread(port + 1, "download/" + fileName, sendInetAddress, Integer.parseInt(dataPort)));
+					Thread rcv_thread = new Thread(new ReceiveThread(port + 1, "download/" + fileName, sendInetAddress, Integer.parseInt(dataPort), false));
 					rcv_thread.start();
 					//发送一个包到服务器数据端口，告知接收线程开启
 					socket.send(new DatagramPacket(new byte[1], 1, sendInetAddress, Integer.parseInt(dataPort) - 1));
@@ -99,7 +99,7 @@ public class Client {
 					message = new String(buffer, 0, rcv_packet.getLength());
 					InetAddress serverAddress = rcv_packet.getAddress();
 					dataPort = message.substring(message.indexOf(":")+1);
-					Thread send_thread = new Thread(new SendThread(serverAddress, port + 1, Integer.parseInt(dataPort), fileName));
+					Thread send_thread = new Thread(new SendThread(serverAddress, port + 1, Integer.parseInt(dataPort), fileName, true));
 					send_thread.start();
 					break;
 				default:
