@@ -19,8 +19,6 @@ public class Server {
 	private DatagramPacket send_packet;
 	private DatagramPacket rcv_packet;
 	private byte[] buffer;
-	private volatile Date start_date;						//用于记录是否超时
-	private volatile boolean isRecv;
 	
 	public Server(int cPort) {
 		this.cPort = cPort;
@@ -78,6 +76,8 @@ public class Server {
 						break;
 					}
 					//没有网络异常时启动发送线程
+					System.out.println("[INFO]开始发送文件 " + fileName);
+					System.out.println("[INFO]服务器数据端口 " + dataPort);
 					messSocket.close();
 					Thread send_thread = new Thread(new SendThread(address, dataPort, port + 1, "server/" + fileName, false));
 					send_thread.start();
@@ -92,6 +92,8 @@ public class Server {
 					if (!dir.exists()) {
 						dir.mkdir();
 					}
+					System.out.println("[INFO]开始接收文件 " + fileName);
+					System.out.println("[INFO]服务器数据端口 " + dataPort);
 					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + fileName, address, port + 1, false, 0));
 					recv_thread.start();
 					//告知客户端接收线程开启以及数据端口
@@ -108,7 +110,7 @@ public class Server {
 					String result = "";
 					for(File temp:file.listFiles()){
 			            if(!temp.isDirectory()){
-			                result += "[INFO]" + temp.toString() + "\n";
+			                result += "[INFO]" + temp.toString().substring(temp.toString().indexOf("/")) + "\n";
 			            }
 			        }
 					if (result == "") result = "[INFO]服务器中没有文件.";

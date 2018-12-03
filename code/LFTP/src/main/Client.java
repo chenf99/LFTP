@@ -85,7 +85,6 @@ public class Client {
 					InetAddress sendInetAddress = rcv_packet.getAddress();
 					String dataPort = message.substring(message.indexOf(":")+1, message.indexOf("fileSize"));
 					String fileSize = message.substring(message.lastIndexOf(":")+1);
-					System.out.println("[INFO]服务器数据端口: " + dataPort);
 					File dir = new File("download/");
 					if (!dir.exists()) {
 						dir.mkdir();
