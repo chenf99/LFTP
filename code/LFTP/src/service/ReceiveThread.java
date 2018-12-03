@@ -25,13 +25,15 @@ public class ReceiveThread implements Runnable {
 	int rwnd = MAX_RWND;						
 	String downloadDir;								// 存储位置
 	private boolean isClient;						// 该接收线程是否是客户端创建
+	private int fileSize;							// 接收的文件大小,客户端接收时需要得知
 	
-	public ReceiveThread(int recvPort, String dir, InetAddress sendInetAddress, int sendPort, boolean isClient) {
+	public ReceiveThread(int recvPort, String dir, InetAddress sendInetAddress, int sendPort, boolean isClient, int fileSize) {
 		this.recvPort = recvPort;
 		this.downloadDir = dir;
 		this.sendInetAddress = sendInetAddress;
 		this.sendPort = sendPort;
 		this.isClient = isClient;
+		this.fileSize = fileSize;
 		expectedseqnum = 0;
 	}
 	

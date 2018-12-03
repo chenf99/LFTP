@@ -10,6 +10,7 @@ import java.util.Date;
 
 import service.ReceiveThread;
 import service.SendThread;
+import tools.FileIO;
 
 public class Server {
 	private static final int BUFFER_SIZE = 1024;
@@ -55,7 +56,8 @@ public class Server {
 				case "lget":
 					//创建数据端口
 					dataPort = 20000 + (int)(Math.random() * 1000);
-					message = "dataport:" + dataPort;
+					int fileSize = FileIO.getBufferLength("server/" + fileName);
+					message = "dataport:" + dataPort + "fileSize:" + fileSize;
 					//告知客户端数据端口
 					send_packet = new DatagramPacket(message.getBytes(), message.getBytes().length, address, port);
 					try {
@@ -90,7 +92,7 @@ public class Server {
 					if (!dir.exists()) {
 						dir.mkdir();
 					}
-					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + fileName, address, port + 1, false));
+					Thread recv_thread = new Thread(new ReceiveThread(dataPort, "server/" + fileName, address, port + 1, false, 0));
 					recv_thread.start();
 					//告知客户端接收线程开启以及数据端口
 					//告知客户端数据端口

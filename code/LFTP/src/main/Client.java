@@ -83,13 +83,14 @@ public class Client {
 					//启动接收线程,此时服务器端发送线程还未开启
 					message = new String(buffer, 0, rcv_packet.getLength());
 					InetAddress sendInetAddress = rcv_packet.getAddress();
-					String dataPort = message.substring(message.indexOf(":")+1);
+					String dataPort = message.substring(message.indexOf(":")+1, message.indexOf("fileSize"));
+					String fileSize = message.substring(message.lastIndexOf(":")+1);
 					System.out.println("[INFO]服务器数据端口: " + dataPort);
 					File dir = new File("download/");
 					if (!dir.exists()) {
 						dir.mkdir();
 					}
-					Thread rcv_thread = new Thread(new ReceiveThread(port + 1, "download/" + fileName, sendInetAddress, Integer.parseInt(dataPort), false));
+					Thread rcv_thread = new Thread(new ReceiveThread(port + 1, "download/" + fileName, sendInetAddress, Integer.parseInt(dataPort), true, Integer.parseInt(fileSize)));
 					rcv_thread.start();
 					//发送一个包到服务器数据端口，告知接收线程开启
 					socket.send(new DatagramPacket(new byte[1], 1, sendInetAddress, Integer.parseInt(dataPort) - 1));
