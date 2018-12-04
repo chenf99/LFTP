@@ -1,6 +1,8 @@
 # LFTP
 计算机网络期中项目
 
+![gif](docs/img/mp4.gif)
+
 ## 功能
 客户端从服务器接收/上传大文件
 
@@ -23,7 +25,7 @@ xxx
 
 ### 使用说明
 
-[Use-doc](docs/User.md)
+[Use-doc](docs/Use.md)
 
 ### 测试文档
 [Test-doc](docs/Test.md)
