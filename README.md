@@ -25,7 +25,7 @@ xxx
 
 ### 使用说明
 
-[Use-doc](docs/User.md)
+[Use-doc](docs/Use.md)
 
 ### 测试文档
 [Test-doc](docs/Test.md)
