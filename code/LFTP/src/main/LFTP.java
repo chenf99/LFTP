@@ -1,5 +1,6 @@
 package main;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -75,6 +76,13 @@ public class LFTP {
 					System.err.println("[ERROR]文件名不能为空");
 					System.exit(0);
 				}
+				
+				File file = new File(main.fileName);
+				if(!file.exists()) {
+					System.err.println("[ERROR]文件名不存在");
+					System.exit(0);
+				}
+				
 				System.out.println("[cmd]文件名: " + main.fileName);
 				
 				createClient(argv[0], main);

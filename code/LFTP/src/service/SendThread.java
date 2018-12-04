@@ -258,7 +258,7 @@ public class SendThread implements Runnable {
 	//超时引发重传事件
 	private void timeOut() {
 		threshold = cwnd / 2;
-		cwnd = threshold;
+		cwnd = 1;
 		status = SS;
 		//System.out.println("启动重传！");
 		startTimer();
