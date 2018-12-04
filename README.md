@@ -21,7 +21,7 @@ LFTP  lget  myserver  mylargefile
 - 应用必须提供有意义的输出信息
 
 ### 设计文档
-xxx
+[Design-doc](docs/Design.md)
 
 ### 使用说明
 
