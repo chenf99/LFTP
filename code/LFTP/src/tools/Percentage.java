@@ -25,12 +25,12 @@ public class Percentage {
 		// TODO：展示进度动画
 		StringBuilder percentageAnimationMessage = new StringBuilder();
 		percentageAnimationMessage.append("[");
-		for(int j = 0; j < 100; j++) {
-			if(j < (int)percentage)
+		for(int j = 0; j < 50; j++) {
+			if(j < (int)percentage/2)
 				percentageAnimationMessage.append("=");
-			if(j == (int)percentage)
+			if(j == (int)percentage/2)
 				percentageAnimationMessage.append(">");
-			else if(j > (int)percentage)
+			else if(j > (int)percentage/2)
 				percentageAnimationMessage.append(" ");
 		}
 		percentageAnimationMessage.append("]\t");
