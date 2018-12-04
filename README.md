@@ -22,7 +22,8 @@ LFTP  lget  myserver  mylargefile
 xxx
 
 ### 使用说明
-xxx
+
+[Use-doc](docs/User.md)
 
 ### 测试文档
-xxx
+[Test-doc](docs/Test.md)

@@ -29,6 +29,19 @@ public class LFTP {
         jCommander.parse(tmp);
         argv[0] = argv[0].toLowerCase(Locale.ROOT);
         switch (argv[0]) {
+        	case "help":
+    		//输出提示信息
+    		System.out.println("[cmd]COMMANDS:\n" + 
+    							"[cmd]server        " + "启动服务器\n" + 
+    							"[cmd]lsend         " + "向服务器发送文件\n" + 
+    							"[cmd]lget          " + "从服务器下载文件\n" + 
+    							"[cmd]listall       " + "列出服务器中所有文件\n");
+    		System.out.println("[cmd]OPTIONS:\n" + 
+    						   	"[cmd]-s            " + "服务器地址,默认127.0.0.1\n" + 
+    							"[cmd]-sp           " + "服务器控制端口,默认7545\n" + 
+    						   	"[cmd]-cp           " + "客户端控制端口,默认6000\n" + 
+    							"[cmd]-f            " + "文件名.get/send时不能为空");
+    		break;
 			case "server":
 				System.out.println("[cmd]启动服务器");
 				Server server = new Server(Integer.parseInt(main.sport));
